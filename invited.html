@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invitation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html {
+      height: 100%;
+      background: #0a0a0a;
+    }
+    body {
+      min-height: 100%;
+      font-family: "Space Mono", monospace;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(120, 0, 0, 0.08) 0%, transparent 50%),
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(255,255,255,0.02) 2px,
+          rgba(255,255,255,0.02) 4px
+        );
+      pointer-events: none;
+      z-index: 0;
+    }
+    .invite {
+      position: relative;
+      z-index: 1;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      animation: fadeUp 1s ease-out;
+    }
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .label {
+      font-size: 0.7rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(2.5rem, 12vw, 4rem);
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      color: #fff;
+      line-height: 0.95;
+      margin-bottom: 1.25rem;
+      text-shadow: 0 0 40px rgba(180, 0, 0, 0.3);
+    }
+    .tagline {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+    .details {
+      text-align: left;
+      border-top: 1px solid #222;
+      border-bottom: 1px solid #222;
+      padding: 1.5rem 0;
+      margin-bottom: 1.5rem;
+    }
+    .detail-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 0.9rem;
+    }
+    .detail-row:last-child {
+      margin-bottom: 0;
+    }
+    .detail-row .key {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #555;
+      min-width: 4.5em;
+    }
+    .detail-row .value {
+      font-size: 0.9rem;
+      color: #ccc;
+    }
+    .foot {
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #444;
+      margin-bottom: 1.5rem;
+    }
+    .accept-btn {
+      display: block;
+      width: 100%;
+      padding: 1rem 1.5rem;
+      font-family: "Space Mono", monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      text-decoration: none;
+      text-align: center;
+      background: transparent;
+      border: 1px solid #444;
+      color: #aaa;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .accept-btn:hover {
+      border-color: #666;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="invite">
+    <p class="label">You are invited</p>
+    <h1>HARD RAVE</h1>
+    <p class="tagline">No Phones. No Photos. <br> Bring the Token</p>
+    <div class="details">
+      <div class="detail-row">
+        <span class="key">When</span>
+        <span class="value">Saturday 00:00 — Sunday 12:00</span>
+      </div>
+      <div class="detail-row">
+        <span class="key">Where</span>
+        <span class="value">Warehouse District, Gate 7</span>
+      </div>
+      <div class="detail-row">
+        <span class="key">Address</span>
+        <span class="value">Industriestr. 42, 12345 Berlin</span>
+      </div>
+    </div>
+    <p class="foot">Present token at the door</p>
+    <a href="accepted.html" class="accept-btn">Accept Invitation</a>
+  </div>
+</body>
+</html>
