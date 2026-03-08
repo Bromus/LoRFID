@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Order</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html {
+      height: 100%;
+      background: #0a0a0a;
+    }
+    body {
+      min-height: 100%;
+      font-family: "Space Mono", monospace;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(120, 0, 0, 0.08) 0%, transparent 50%),
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(255,255,255,0.02) 2px,
+          rgba(255,255,255,0.02) 4px
+        );
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orders {
+      position: relative;
+      z-index: 1;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      animation: fadeUp 1s ease-out;
+    }
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .label {
+      font-size: 0.7rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(2rem, 10vw, 3rem);
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      color: #fff;
+      line-height: 0.95;
+      margin-bottom: 1.5rem;
+    }
+    .order-box {
+      text-align: left;
+      border: 1px solid #222;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .order-box .order-text {
+      font-size: 1rem;
+      color: #ccc;
+      line-height: 1.5;
+    }
+    .foot {
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <div class="orders">
+    <p class="label">Your order</p>
+    <h1>ORDERS</h1>
+    <div class="order-box">
+      <p class="order-text">Get me a drink.</p>
+    </div>
+    <p class="foot">We'll find you.</p>
+  </div>
+</body>
+</html>
