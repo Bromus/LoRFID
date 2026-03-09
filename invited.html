@@ -163,7 +163,38 @@
       </div>
     </div>
     <p class="foot">Present token at the door</p>
-    <a href="accepted.html" class="accept-btn">Accept Invitation</a>
+    <a href="#" class="accept-btn" id="acceptBtn">Accept Invitation</a>
   </div>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var token = params.get("token") || "";
+      var name = params.get("name") || "";
+
+      var btn = document.getElementById("acceptBtn");
+      if (!btn) return;
+
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+
+        btn.textContent = "…";
+        btn.style.pointerEvents = "none";
+
+        fetch("https://script.google.com/macros/s/AKfycbzlXNBS43bVrPtau-CrivyKjxTI9jim3CRUAwqf9HbcyHtdLrjgdN7tuB3m68gMpfR3/exec", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token: token,
+            name: name,
+            accepted_at: new Date().toISOString()
+          })
+        }).catch(function () {
+          // ignore logging errors
+        }).finally(function () {
+          window.location.href = "accepted.html";
+        });
+      });
+    })();
+  </script>
 </body>
 </html>

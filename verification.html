@@ -186,7 +186,8 @@
           // Forward existing query parameters (including token/name) to orders page
           window.location.href = "orders.html" + window.location.search;
         } else {
-          window.location.href = "invited.html";
+          // Forward existing query parameters to invited page so we can log acceptances
+          window.location.href = "invited.html" + window.location.search;
         }
         return;
       }
