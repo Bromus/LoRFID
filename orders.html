@@ -64,6 +64,15 @@
         transform: translateY(0);
       }
     }
+    .token {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(2.5rem, 12vw, 3.5rem);
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 1.25rem;
+    }
     .label {
       font-size: 0.7rem;
       letter-spacing: 0.35em;
@@ -81,16 +90,65 @@
       margin-bottom: 1.5rem;
     }
     .order-box {
-      text-align: left;
+      text-align: center;
       border: 1px solid #222;
       padding: 1.25rem 1.5rem;
       margin-bottom: 1.5rem;
       background: rgba(255, 255, 255, 0.02);
+      position: relative;
+      overflow: hidden;
     }
     .order-box .order-text {
       font-size: 1rem;
       color: #ccc;
       line-height: 1.5;
+      transition: opacity 0.4s ease;
+    }
+    .order-box .compliance-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 1.2rem;
+      color: #ffecec;
+      background: transparent;
+      padding: 0;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+    }
+    .countdown {
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      color: #aaa;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      transition: opacity 0.4s ease;
+    }
+    .countdown.warn {
+      color: #ff6666;
+    }
+    .order-box.flash {
+      animation: flash 1.4s ease-in-out infinite;
+    }
+    @keyframes flash {
+      0%, 100% { background-color: rgba(255, 255, 255, 0.02); }
+      50% { background-color: rgba(120, 0, 0, 0.35); }
+    }
+    .order-box.compliance-pulse {
+      animation: compliancePulse 2.8s ease-in-out infinite;
+    }
+    @keyframes compliancePulse {
+      0%, 100% {
+        background-color: rgba(120, 0, 0, 0.3);
+        border-color: rgba(120, 0, 0, 0.7);
+      }
+      50% {
+        background-color: rgba(180, 0, 0, 0.65);
+        border-color: rgba(255, 120, 120, 0.9);
+      }
     }
     .foot {
       font-size: 0.65rem;
@@ -102,12 +160,57 @@
 </head>
 <body>
   <div class="orders">
-    <p class="label">Your order</p>
+    <h1 class="token" id="tokenHeading">#?</h1>
+    <p class="label">Your</p>
     <h1>ORDERS</h1>
-    <div class="order-box">
-      <p class="order-text">Get me a drink.</p>
+    <div class="order-box" id="orderBox">
+      <p class="order-text" id="orderText" style="margin-bottom: 1.25rem;">Get Naked.  Take Picture. Send To Me.</p>
+      <p class="order-text compliance-text" id="complianceText">COMPLIANCE IS MANDATORY</p>
+      <p class="countdown" id="countdown">Order self-destructs in 10 seconds.</p>
     </div>
-    <p class="foot">We'll find you.</p>
+    <p class="foot">I will find you</p>
   </div>
+  <script>
+    // Show token from query string
+    var params = new URLSearchParams(window.location.search);
+    var tokenParam = params.get("token");
+    var tokenHeading = document.getElementById("tokenHeading");
+    if (tokenHeading && tokenParam) {
+      tokenHeading.textContent = "#" + tokenParam;
+    }
+
+    // Self-destruct order after countdown
+    var countdownEl = document.getElementById("countdown");
+    var orderBoxEl = document.getElementById("orderBox");
+    var orderTextEl = document.getElementById("orderText");
+    var complianceEl = document.getElementById("complianceText");
+    var seconds = 10;
+
+    if (countdownEl && orderTextEl && complianceEl && orderBoxEl) {
+      countdownEl.textContent = "Order self-destructs in " + seconds + " seconds.";
+      var timer = setInterval(function () {
+        seconds--;
+        if (seconds > 0) {
+          countdownEl.textContent = "Order self-destructs in " + seconds + " seconds.";
+          if (seconds <= 8) {
+            countdownEl.classList.add("warn");
+          }
+        } else {
+          clearInterval(timer);
+          // fade out order + countdown
+          orderTextEl.style.opacity = "0";
+          countdownEl.style.opacity = "0";
+
+          // fade in compliance after a short delay so transitions are visible
+          setTimeout(function () {
+            orderTextEl.style.display = "none";
+            countdownEl.style.display = "none";
+            complianceEl.style.opacity = "1";
+            orderBoxEl.classList.add("compliance-pulse");
+          }, 400);
+        }
+      }, 1000);
+    }
+  </script>
 </body>
 </html>
