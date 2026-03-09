@@ -86,5 +86,28 @@
     <h1>We expect your presence.</h1>
     <p class="sub">You're in. Be there.</p>
   </div>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var token = params.get("token") || "";
+      var name = params.get("name") || "";
+      if (!token && !name) return;
+
+      // Log to sheet in the background (hidden iframe), then clean URL
+      var scriptUrl = "https://script.google.com/macros/s/AKfycbz7pERiNYGSmrTqmGnHf-ywzFUB9rqJSUHiJ7f8SmjNGAis8zEP1LASs_KC2LYl0yP3/exec";
+      var q = new URLSearchParams();
+      q.set("token", token);
+      q.set("name", name);
+      var iframe = document.createElement("iframe");
+      iframe.style.cssText = "position:absolute;width:0;height:0;border:0;visibility:hidden";
+      iframe.src = scriptUrl + "?" + q.toString();
+      document.body.appendChild(iframe);
+
+      // Remove query string from address bar
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+      }
+    })();
+  </script>
 </body>
 </html>

@@ -180,19 +180,13 @@
         btn.textContent = "…";
         btn.style.pointerEvents = "none";
 
-        fetch("https://script.google.com/macros/s/AKfycbzlXNBS43bVrPtau-CrivyKjxTI9jim3CRUAwqf9HbcyHtdLrjgdN7tuB3m68gMpfR3/exec", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            token: token,
-            name: name,
-            accepted_at: new Date().toISOString()
-          })
-        }).catch(function () {
-          // ignore logging errors
-        }).finally(function () {
-          window.location.href = "accepted.html";
-        });
+        // Go straight to accepted page (with params so it can log in the background)
+        var acceptedUrl = window.location.href.replace(/[^/]*$/, "accepted.html");
+        var q = new URLSearchParams();
+        if (token) q.set("token", token);
+        if (name) q.set("name", name);
+        var query = q.toString();
+        window.location.href = query ? acceptedUrl + "?" + query : acceptedUrl;
       });
     })();
   </script>
