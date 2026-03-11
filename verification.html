@@ -182,9 +182,7 @@
       e.preventDefault();
       var entered = passwordInput.value;
 
-        if (entered === FAKE_PASSWORD) {
-        if (nameParam && ["loppan", "ceen"].includes(nameParam.toLowerCase())) {
-          
+     if (entered === FAKE_PASSWORD) {
           window.location.href = "invited.html" + window.location.search;
         return;
       }
