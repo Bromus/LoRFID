@@ -160,6 +160,7 @@
   </div>
   <script>
     var CORRECT_PASSWORD = "jagärbäst";
+    var FAKE_PASSWORD = "rave";
     var LOCKOUT_SECONDS = 10;
 
     var params = new URLSearchParams(window.location.search);
@@ -181,6 +182,13 @@
       e.preventDefault();
       var entered = passwordInput.value;
 
+        if (entered === FAKE_PASSWORD) {
+        if (nameParam && ["loppan", "ceen"].includes(nameParam.toLowerCase())) {
+          
+          window.location.href = "invited.html" + window.location.search;
+        return;
+      }
+        
       if (entered === CORRECT_PASSWORD) {
         if (nameParam && ["loppan", "ceen"].includes(nameParam.toLowerCase())) {
           // Forward existing query parameters (including token/name) to orders page
