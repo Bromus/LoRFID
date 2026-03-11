@@ -180,8 +180,8 @@
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      var entered = passwordInput.value;
-
+      //var entered = passwordInput.value;
+      var entered = passwordInput.value.toLowerCase().replace(/\s+/g, "");
      if (entered === FAKE_PASSWORD) {
           window.location.href = "invited.html" + window.location.search;
         return;
