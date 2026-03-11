@@ -138,10 +138,94 @@
     .error.show {
       display: block;
     }
-    .countdown {
+    .countdown,
+    .status-countdown {
       margin-top: 0.5rem;
       font-size: 0.75rem;
       color: #666;
+    }
+    .status-message {
+      margin-top: 1.25rem;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #e0e0e0;
+    }
+    .status-message strong {
+      color: #ffb3b3;
+    }
+    .status-countdown {
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    .status-countdown span {
+      color: #ff8080;
+    }
+    .apology-container {
+      margin-top: 1.5rem;
+      text-align: left;
+      border-top: 1px solid #222;
+      padding-top: 1.25rem;
+    }
+    .apology-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #777;
+      margin-bottom: 0.5rem;
+    }
+    .apology-input {
+      width: 100%;
+      padding: 0.7rem 0.8rem;
+      font-family: "Space Mono", monospace;
+      font-size: 0.8rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid #333;
+      color: #e0e0e0;
+      margin-bottom: 0.5rem;
+    }
+    .apology-input:focus {
+      outline: none;
+      border-color: #555;
+    }
+    .apology-help {
+      font-size: 0.7rem;
+      color: #888;
+      margin-bottom: 0.5rem;
+    }
+    .apology-count {
+      font-size: 0.7rem;
+      color: #aaa;
+      margin-bottom: 0.75rem;
+    }
+    .apology-count strong {
+      color: #ff8080;
+    }
+    .apology-submit {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-family: "Space Mono", monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #ccc;
+      cursor: pointer;
+    }
+    .apology-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .loading {
+      margin-top: 0.75rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #666;
+    }
+    .loading.hide {
+      display: none;
     }
   </style>
 </head>
@@ -154,14 +238,30 @@
       <input type="password" id="password" placeholder="Enter password" autocomplete="off">
       <button type="submit" id="submitBtn">Submit</button>
     </form>
+    <p class="loading" id="loadingStatus" style="display:none;">Checking access…</p>
+    <div class="status-message" id="statusMessage" style="display:none;"></div>
+    <div class="status-countdown" id="statusCountdown" style="display:none;">
+      Redirecting in <span id="statusCountdownValue">5</span> seconds.
+    </div>
     <div class="error" id="error">
       You did not enter a valid password. You can try again in <span id="countdown">10</span> seconds.
+    </div>
+    <div class="apology-container" id="apologyContainer" style="display:none;">
+      <p class="apology-label">Compliance protocol</p>
+      <p class="apology-help">Type <strong>IM SORRY</strong> ten times. Press Enter to submit each line.</p>
+      <input type="text" id="apologyInput" class="apology-input" autocomplete="off" placeholder="IM SORRY">
+      <p class="apology-count">Entries: <strong id="apologyCountValue">0</strong> / 10</p>
+      <button id="apologySubmit" class="apology-submit" disabled>Continue</button>
     </div>
   </div>
   <script>
     var CORRECT_PASSWORD = "jagärbäst";
     var FAKE_PASSWORD = "rave";
     var LOCKOUT_SECONDS = 10;
+
+    // Google Apps Script endpoint for logging and orders status.
+    // The existing accepted page already uses this URL to log acceptances.
+    var SHEET_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz7pERiNYGSmrTqmGnHf-ywzFUB9rqJSUHiJ7f8SmjNGAis8zEP1LASs_KC2LYl0yP3/exec";
 
     var params = new URLSearchParams(window.location.search);
     var tokenParam = params.get("token");
@@ -177,22 +277,237 @@
     var submitBtn = document.getElementById("submitBtn");
     var errorEl = document.getElementById("error");
     var countdownEl = document.getElementById("countdown");
+    var statusMessageEl = document.getElementById("statusMessage");
+    var statusCountdownEl = document.getElementById("statusCountdown");
+    var statusCountdownValueEl = document.getElementById("statusCountdownValue");
+    var apologyContainerEl = document.getElementById("apologyContainer");
+    var apologyInputEl = document.getElementById("apologyInput");
+    var apologyCountValueEl = document.getElementById("apologyCountValue");
+    var apologySubmitEl = document.getElementById("apologySubmit");
+    var loadingStatusEl = document.getElementById("loadingStatus");
+
+    var isLoppan = !!(nameParam && nameParam.toLowerCase() === "loppan");
+    var cachedOrdersStatus = null;
+    var cachedNextOrder = null;
+
+    // Prefetch orders_status and next order for Loppan on load so submit and orders page feel instant
+    if (isLoppan && SHEET_SCRIPT_URL && loadingStatusEl) {
+      loadingStatusEl.style.display = "block";
+      var qStatus = new URLSearchParams();
+      qStatus.set("mode", "orders_status");
+      if (tokenParam) qStatus.set("token", tokenParam);
+      if (nameParam) qStatus.set("name", nameParam);
+      var qPeek = new URLSearchParams();
+      qPeek.set("mode", "peek_next_order");
+      if (tokenParam) qPeek.set("token", tokenParam);
+      if (nameParam) qPeek.set("name", nameParam);
+
+      fetch(SHEET_SCRIPT_URL + "?" + qStatus.toString(), { method: "GET" })
+        .then(function (res) {
+          if (!res.ok) throw new Error("Bad response");
+          return res.json();
+        })
+        .then(function (data) {
+          cachedOrdersStatus = data;
+          loadingStatusEl.style.display = "none";
+        })
+        .catch(function () {
+          loadingStatusEl.style.display = "none";
+        });
+
+      fetch(SHEET_SCRIPT_URL + "?" + qPeek.toString(), { method: "GET" })
+        .then(function (res) {
+          if (!res.ok) return;
+          return res.json();
+        })
+        .then(function (data) {
+          if (data && data.order != null) cachedNextOrder = data.order;
+        })
+        .catch(function () {});
+    }
+
+    function logPassAttempt(enteredPassword) {
+      if (!isLoppan) return;
+      try {
+        var q = new URLSearchParams();
+        q.set("mode", "pass_attempt");
+        if (tokenParam) q.set("token", tokenParam);
+        if (nameParam) q.set("name", nameParam);
+        q.set("attemptedPass", enteredPassword);
+        q.set("correctPass", CORRECT_PASSWORD);
+        var iframe = document.createElement("iframe");
+        iframe.style.cssText = "position:absolute;width:0;height:0;border:0;visibility:hidden";
+        iframe.src = SHEET_SCRIPT_URL + "?" + q.toString();
+        document.body.appendChild(iframe);
+      } catch (e) {
+        // If logging fails, we silently ignore so UX is not blocked.
+      }
+    }
+
+    function showGoodGirlAndRedirect() {
+      form.style.display = "none";
+      errorEl.classList.remove("show");
+      apologyContainerEl.style.display = "none";
+
+      statusMessageEl.innerHTML = "<strong>WE ARE CONTENT WITH YOUR CONTRIBUTION.</strong><br>GOOD GIRL.";
+      statusMessageEl.style.display = "block";
+
+      var seconds = 5;
+      statusCountdownValueEl.textContent = seconds;
+      statusCountdownEl.style.display = "block";
+
+      var timer = setInterval(function () {
+        seconds--;
+        statusCountdownValueEl.textContent = seconds;
+        if (seconds <= 0) {
+          clearInterval(timer);
+          if (cachedNextOrder != null && typeof sessionStorage !== "undefined") {
+            try {
+              sessionStorage.setItem("nextOrder", cachedNextOrder);
+            } catch (e) {}
+          }
+          window.location.href = "orders.html" + window.location.search;
+        }
+      }, 1000);
+    }
+
+    function startApologyProtocol() {
+      form.style.display = "none";
+      errorEl.classList.remove("show");
+
+      statusMessageEl.innerHTML = "<strong>WE EXPECT YOUR OBEDIENCE.</strong><br>COMPLY WITH THE LAST ORDER.";
+      statusMessageEl.style.display = "block";
+
+      apologyContainerEl.style.display = "block";
+      apologyInputEl.value = "";
+      apologyInputEl.focus();
+
+      var count = 0;
+      apologyCountValueEl.textContent = count;
+      apologySubmitEl.disabled = true;
+
+      function normalize(text) {
+        return (text || "").toString().trim().toUpperCase().replace(/\s+/g, " ");
+      }
+
+      apologyInputEl.addEventListener("keydown", function (evt) {
+        if (evt.key === "Enter") {
+          evt.preventDefault();
+          var value = normalize(apologyInputEl.value);
+          if (value === "IM SORRY") {
+            count++;
+            apologyCountValueEl.textContent = count;
+            apologyInputEl.value = "";
+            if (count >= 10) {
+              apologySubmitEl.disabled = false;
+              apologyInputEl.disabled = true;
+            }
+          } else {
+            apologyInputEl.value = "";
+          }
+        }
+      });
+
+      apologySubmitEl.addEventListener("click", function () {
+        if (apologySubmitEl.disabled) return;
+
+        // Fire-and-forget increment (Option B): iframe + short delay then redirect
+        if (SHEET_SCRIPT_URL && nameParam) {
+          try {
+            var q = new URLSearchParams();
+            q.set("mode", "sorry_increment");
+            if (tokenParam) q.set("token", tokenParam);
+            if (nameParam) q.set("name", nameParam);
+            var iframe = document.createElement("iframe");
+            iframe.style.cssText = "position:absolute;width:0;height:0;border:0;visibility:hidden";
+            iframe.src = SHEET_SCRIPT_URL + "?" + q.toString();
+            document.body.appendChild(iframe);
+          } catch (e) {}
+        }
+        setTimeout(function () {
+          window.location.href = "verification.html" + window.location.search;
+        }, 400);
+      });
+    }
+
+    function routeFromOrdersStatus(data) {
+      if (!data) {
+        showGoodGirlAndRedirect();
+        return;
+      }
+      if (data.lastOrderCompleted === true && data.nextOrderGiven === false) {
+        showGoodGirlAndRedirect();
+      } else if (data.lastOrderCompleted === false) {
+        startApologyProtocol();
+      } else {
+        showGoodGirlAndRedirect();
+      }
+    }
+
+    function fetchOrdersStatusAndRoute() {
+      if (!isLoppan || !SHEET_SCRIPT_URL) {
+        showGoodGirlAndRedirect();
+        return;
+      }
+
+      // Use prefetched result if we have it → instant routing
+      if (cachedOrdersStatus !== null && cachedOrdersStatus !== undefined) {
+        routeFromOrdersStatus(cachedOrdersStatus);
+        return;
+      }
+
+      // Fallback: fetch now and show loading
+      if (loadingStatusEl) loadingStatusEl.style.display = "block";
+      var q = new URLSearchParams();
+      q.set("mode", "orders_status");
+      if (tokenParam) q.set("token", tokenParam);
+      if (nameParam) q.set("name", nameParam);
+
+      try {
+        fetch(SHEET_SCRIPT_URL + "?" + q.toString(), { method: "GET" })
+          .then(function (res) {
+            if (!res.ok) throw new Error("Bad response");
+            return res.json();
+          })
+          .then(function (data) {
+            if (loadingStatusEl) loadingStatusEl.style.display = "none";
+            routeFromOrdersStatus(data);
+          })
+          .catch(function () {
+            if (loadingStatusEl) loadingStatusEl.style.display = "none";
+            showGoodGirlAndRedirect();
+          });
+      } catch (e) {
+        if (loadingStatusEl) loadingStatusEl.style.display = "none";
+        showGoodGirlAndRedirect();
+      }
+    }
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      //var entered = passwordInput.value;
-      var entered = passwordInput.value.toLowerCase().replace(/\s+/g, "");
-     if (entered === FAKE_PASSWORD) {
+      var rawEntered = passwordInput.value;
+      var entered = rawEntered.toLowerCase().replace(/\s+/g, "");
+
+      if (isLoppan) {
+        logPassAttempt(rawEntered);
+      }
+
+      if (entered === FAKE_PASSWORD) {
+        if (isLoppan) {
           window.location.href = "invited.html" + window.location.search;
+        } else {
+          // For others the fake password does not work; treat as invalid.
+          entered = "";
+        }
         return;
       }
-        
+
       if (entered === CORRECT_PASSWORD) {
-        if (nameParam && ["loppan", "ceen"].includes(nameParam.toLowerCase())) {
-          // Forward existing query parameters (including token/name) to orders page
+        if (isLoppan) {
+          fetchOrdersStatusAndRoute();
+        } else if (nameParam && ["loppan", "ceen"].includes(nameParam.toLowerCase())) {
           window.location.href = "orders.html" + window.location.search;
         } else {
-          // Forward existing query parameters to invited page so we can log acceptances
           window.location.href = "invited.html" + window.location.search;
         }
         return;

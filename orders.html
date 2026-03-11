@@ -171,22 +171,34 @@
     <p class="foot">Obedience will be Rewarded</p>
   </div>
   <script>
+    // Same Apps Script endpoint used on verification/accepted pages
+    var SHEET_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz7pERiNYGSmrTqmGnHf-ywzFUB9rqJSUHiJ7f8SmjNGAis8zEP1LASs_KC2LYl0yP3/exec";
+
     // Show token from query string
     var params = new URLSearchParams(window.location.search);
     var tokenParam = params.get("token");
+    var nameParam = params.get("name");
     var tokenHeading = document.getElementById("tokenHeading");
     if (tokenHeading && tokenParam) {
       tokenHeading.textContent = "#" + tokenParam;
     }
 
-    // Self-destruct order after countdown
     var countdownEl = document.getElementById("countdown");
     var orderBoxEl = document.getElementById("orderBox");
     var orderTextEl = document.getElementById("orderText");
     var complianceEl = document.getElementById("complianceText");
-    var seconds = 10;
 
-    if (countdownEl && orderTextEl && complianceEl && orderBoxEl) {
+    // For Loppan, we don't want the hard-coded text flashing
+    // before we know the real next order, so clear it up front.
+    var originalDefaultText = orderTextEl.textContent;
+    if (nameParam && nameParam.toLowerCase() === "loppan") {
+      orderTextEl.textContent = "";
+    }
+
+    function startSelfDestructCountdown(onCompliance) {
+      var seconds = 10;
+      if (!(countdownEl && orderTextEl && complianceEl && orderBoxEl)) return;
+
       countdownEl.textContent = "Order self-destructs in " + seconds + " seconds.";
       var timer = setInterval(function () {
         seconds--;
@@ -207,10 +219,77 @@
             countdownEl.style.display = "none";
             complianceEl.style.opacity = "1";
             orderBoxEl.classList.add("compliance-pulse");
+            if (typeof onCompliance === "function") onCompliance();
           }, 400);
         }
       }, 1000);
     }
+
+    function markOrderGiven() {
+      if (!SHEET_SCRIPT_URL || !nameParam) return;
+      try {
+        var q = new URLSearchParams();
+        q.set("mode", "next_order");
+        if (tokenParam) q.set("token", tokenParam);
+        if (nameParam) q.set("name", nameParam);
+        var iframe = document.createElement("iframe");
+        iframe.style.cssText = "position:absolute;width:0;height:0;border:0;visibility:hidden";
+        iframe.src = SHEET_SCRIPT_URL + "?" + q.toString();
+        document.body.appendChild(iframe);
+      } catch (e) {}
+    }
+
+    function loadNextOrder() {
+      var isLoppan = !!(nameParam && nameParam.toLowerCase() === "loppan");
+
+      if (!isLoppan || !SHEET_SCRIPT_URL) {
+        startSelfDestructCountdown();
+        return;
+      }
+
+      // Use order passed from verification if present (no fetch needed)
+      try {
+        if (typeof sessionStorage !== "undefined" && sessionStorage.getItem("nextOrder")) {
+          var passedOrder = sessionStorage.getItem("nextOrder");
+          sessionStorage.removeItem("nextOrder");
+          if (passedOrder) {
+            orderTextEl.textContent = passedOrder;
+            startSelfDestructCountdown(markOrderGiven);
+            return;
+          }
+        }
+      } catch (e) {}
+
+      // Fallback: fetch next order (e.g. direct visit to orders page)
+      var q = new URLSearchParams();
+      q.set("mode", "peek_next_order");
+      if (tokenParam) q.set("token", tokenParam);
+      if (nameParam) q.set("name", nameParam);
+
+      try {
+        fetch(SHEET_SCRIPT_URL + "?" + q.toString(), { method: "GET" })
+          .then(function (res) {
+            if (!res.ok) throw new Error("Bad response");
+            return res.json();
+          })
+          .then(function (data) {
+            if (data && data.order) {
+              orderTextEl.textContent = data.order;
+            } else {
+              orderTextEl.textContent = originalDefaultText;
+            }
+            startSelfDestructCountdown(markOrderGiven);
+          })
+          .catch(function () {
+            if (!orderTextEl.textContent) orderTextEl.textContent = originalDefaultText;
+            startSelfDestructCountdown(markOrderGiven);
+          });
+      } catch (e) {
+        startSelfDestructCountdown(markOrderGiven);
+      }
+    }
+
+    loadNextOrder();
   </script>
 </body>
 </html>
