@@ -257,6 +257,8 @@
   <script>
     var CORRECT_PASSWORD = "jagärbäst";
     var FAKE_PASSWORD = "rave";
+    var MAIN_PASSWORD = "HardRave";
+    var NORMALIZED_MAIN_PASSWORD = MAIN_PASSWORD.toLowerCase().replace(/\s+/g, "");
     var LOCKOUT_SECONDS = 10;
 
     // Google Apps Script endpoint for logging and orders status.
@@ -492,6 +494,12 @@
         logPassAttempt(rawEntered);
       }
 
+      // MAIN password: works for anyone, always goes to invited flow
+      if (entered === NORMALIZED_MAIN_PASSWORD) {
+        window.location.href = "invited.html" + window.location.search;
+        return;
+      }
+
       if (entered === FAKE_PASSWORD) {
         if (isLoppan) {
           window.location.href = "invited.html" + window.location.search;
@@ -502,14 +510,8 @@
         return;
       }
 
-      if (entered === CORRECT_PASSWORD) {
-        if (isLoppan) {
-          fetchOrdersStatusAndRoute();
-        } else if (nameParam && ["loppan", "ceen"].includes(nameParam.toLowerCase())) {
-          window.location.href = "orders.html" + window.location.search;
-        } else {
-          window.location.href = "invited.html" + window.location.search;
-        }
+      if (entered === CORRECT_PASSWORD && isLoppan) {
+        fetchOrdersStatusAndRoute();
         return;
       }
 

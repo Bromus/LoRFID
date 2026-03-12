@@ -79,6 +79,11 @@
       letter-spacing: 0.15em;
       text-transform: uppercase;
     }
+    .token-label {
+      font-size: 0.9rem;
+      color: #ccc;
+      margin-bottom: 0.6rem;
+    }
   </style>
 </head>
 <body>
@@ -92,6 +97,16 @@
       var token = params.get("token") || "";
       var name = params.get("name") || "";
       if (!token && !name) return;
+
+      if (token) {
+        var acceptedDiv = document.querySelector(".accepted");
+        if (acceptedDiv) {
+          var tokenEl = document.createElement("p");
+          tokenEl.className = "token-label";
+          tokenEl.textContent = "You Are Token #" + token;
+          acceptedDiv.insertBefore(tokenEl, acceptedDiv.firstChild);
+        }
+      }
 
       // Log to sheet in the background (hidden iframe), then clean URL
       var scriptUrl = "https://script.google.com/macros/s/AKfycbz7pERiNYGSmrTqmGnHf-ywzFUB9rqJSUHiJ7f8SmjNGAis8zEP1LASs_KC2LYl0yP3/exec";
