@@ -227,6 +227,16 @@
     .loading.hide {
       display: none;
     }
+    @keyframes goodGirlPulse {
+      0%, 100% {
+        background-color: rgba(120, 0, 0, 0.3);
+        border-color: rgba(120, 0, 0, 0.7);
+      }
+      50% {
+        background-color: rgba(180, 0, 0, 0.65);
+        border-color: rgba(255, 120, 120, 0.9);
+      }
+    }
   </style>
 </head>
 <body>
@@ -346,6 +356,20 @@
       }
     }
 
+    function markOrderGiven() {
+      if (!SHEET_SCRIPT_URL) return;
+      try {
+        var q = new URLSearchParams();
+        q.set("mode", "next_order");
+        if (tokenParam) q.set("token", tokenParam);
+        if (nameParam) q.set("name", nameParam);
+        var iframe = document.createElement("iframe");
+        iframe.style.cssText = "position:absolute;width:0;height:0;border:0;visibility:hidden";
+        iframe.src = SHEET_SCRIPT_URL + "?" + q.toString();
+        document.body.appendChild(iframe);
+      } catch (e) {}
+    }
+
     function showGoodGirlAndRedirect() {
       form.style.display = "none";
       errorEl.classList.remove("show");
@@ -354,23 +378,42 @@
       statusMessageEl.innerHTML = "<strong>WE ARE CONTENT WITH YOUR CONTRIBUTION.</strong><br>GOOD GIRL.";
       statusMessageEl.style.display = "block";
 
-      var seconds = 5;
-      statusCountdownValueEl.textContent = seconds;
-      statusCountdownEl.style.display = "block";
+      statusCountdownEl.style.display = "none";
 
-      var timer = setInterval(function () {
-        seconds--;
-        statusCountdownValueEl.textContent = seconds;
-        if (seconds <= 0) {
-          clearInterval(timer);
-          if (cachedNextOrder != null && typeof sessionStorage !== "undefined") {
-            try {
-              sessionStorage.setItem("nextOrder", cachedNextOrder);
-            } catch (e) {}
-          }
-          window.location.href = "orders.html" + window.location.search;
+      var nextBtn = document.createElement("button");
+      nextBtn.textContent = "I am ready for my next assignment, Daddy";
+      nextBtn.style.marginTop = "1.5rem";
+      nextBtn.style.width = "100%";
+      nextBtn.style.padding = "0.9rem 1rem";
+      nextBtn.style.fontFamily = '"Space Mono", monospace';
+      nextBtn.style.fontSize = "0.85rem";
+      nextBtn.style.letterSpacing = "0.1em";
+      nextBtn.style.textTransform = "uppercase";
+      nextBtn.style.background = "rgba(180, 0, 0, 0.65)";
+      nextBtn.style.border = "1px solid rgba(255, 120, 120, 0.9)";
+      nextBtn.style.color = "#ffecec";
+      nextBtn.style.animation = "goodGirlPulse 2.8s ease-in-out infinite";
+      nextBtn.style.cursor = "pointer";
+
+      nextBtn.addEventListener("click", function () {
+        if (nextBtn.disabled) return;
+        nextBtn.disabled = true;
+
+        if (cachedNextOrder != null && typeof sessionStorage !== "undefined") {
+          try {
+            sessionStorage.setItem("nextOrder", cachedNextOrder);
+          } catch (e) {}
         }
-      }, 1000);
+
+        markOrderGiven();
+
+        // Small delay so the Apps Script "yes" update has time to fire
+        setTimeout(function () {
+          window.location.href = "orders.html" + window.location.search;
+        }, 400);
+      });
+
+      statusMessageEl.parentNode.insertBefore(nextBtn, statusMessageEl.nextSibling);
     }
 
     function startApologyProtocol() {

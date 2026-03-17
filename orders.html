@@ -195,7 +195,7 @@
       orderTextEl.textContent = "";
     }
 
-    function startSelfDestructCountdown(onCompliance) {
+    function startSelfDestructCountdown() {
       var seconds = 10;
       if (!(countdownEl && orderTextEl && complianceEl && orderBoxEl)) return;
 
@@ -219,24 +219,9 @@
             countdownEl.style.display = "none";
             complianceEl.style.opacity = "1";
             orderBoxEl.classList.add("compliance-pulse");
-            if (typeof onCompliance === "function") onCompliance();
           }, 400);
         }
       }, 1000);
-    }
-
-    function markOrderGiven() {
-      if (!SHEET_SCRIPT_URL || !nameParam) return;
-      try {
-        var q = new URLSearchParams();
-        q.set("mode", "next_order");
-        if (tokenParam) q.set("token", tokenParam);
-        if (nameParam) q.set("name", nameParam);
-        var iframe = document.createElement("iframe");
-        iframe.style.cssText = "position:absolute;width:0;height:0;border:0;visibility:hidden";
-        iframe.src = SHEET_SCRIPT_URL + "?" + q.toString();
-        document.body.appendChild(iframe);
-      } catch (e) {}
     }
 
     function loadNextOrder() {
@@ -254,7 +239,7 @@
           sessionStorage.removeItem("nextOrder");
           if (passedOrder) {
             orderTextEl.textContent = passedOrder;
-            startSelfDestructCountdown(markOrderGiven);
+            startSelfDestructCountdown();
             return;
           }
         }
@@ -278,14 +263,14 @@
             } else {
               orderTextEl.textContent = originalDefaultText;
             }
-            startSelfDestructCountdown(markOrderGiven);
+            startSelfDestructCountdown();
           })
           .catch(function () {
             if (!orderTextEl.textContent) orderTextEl.textContent = originalDefaultText;
-            startSelfDestructCountdown(markOrderGiven);
+            startSelfDestructCountdown();
           });
       } catch (e) {
-        startSelfDestructCountdown(markOrderGiven);
+        startSelfDestructCountdown();
       }
     }
 
