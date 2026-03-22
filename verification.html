@@ -553,6 +553,11 @@
         return;
       }
 
+      if (isLoppan && entered === "tight4daddy") {
+        window.location.href = "kegel.html" + window.location.search;
+        return;
+      }
+
       if (entered === CORRECT_PASSWORD && isLoppan) {
         fetchOrdersStatusAndRoute();
         return;

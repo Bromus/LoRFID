@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kegel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { height: 100%; background: #0a0a0a; }
+    body {
+      min-height: 100%;
+      font-family: "Space Mono", monospace;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(120, 0, 0, 0.08) 0%, transparent 50%),
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(255,255,255,0.02) 2px,
+          rgba(255,255,255,0.02) 4px
+        );
+      pointer-events: none;
+      z-index: 0;
+    }
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      animation: fadeUp 1s ease-out;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .label {
+      font-size: 0.7rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(2rem, 10vw, 3rem);
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      color: #fff;
+      line-height: 0.95;
+      margin-bottom: 1rem;
+    }
+    .counter-box {
+      border: 1px solid #222;
+      background: rgba(255, 255, 255, 0.02);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .counter-box .n {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(2.5rem, 14vw, 3.5rem);
+      letter-spacing: 0.06em;
+      color: #ffb3b3;
+      line-height: 1;
+    }
+    .counter-box .sub {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #666;
+      margin-top: 0.35rem;
+    }
+    .phase {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(1.75rem, 8vw, 2.5rem);
+      letter-spacing: 0.12em;
+      color: #fff;
+      margin-bottom: 0.75rem;
+      min-height: 1.2em;
+    }
+    .phase.hold { color: #ff8080; }
+    .phase.relax { color: #88c8ff; }
+    .timer-block {
+      min-height: clamp(4rem, 22vw, 5.5rem);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .timer {
+      font-size: clamp(3rem, 18vw, 5rem);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: #e0e0e0;
+      line-height: 1;
+    }
+    .good-girl-msg {
+      display: none;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(2.25rem, 12vw, 4rem);
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      color: #ffb3b3;
+      text-shadow: 0 0 28px rgba(180, 0, 0, 0.35);
+      line-height: 1.1;
+      animation: goodGirlPulse 2.2s ease-in-out infinite;
+    }
+    @keyframes goodGirlPulse {
+      0%, 100% { opacity: 0.2; transform: scale(0.97); }
+      50% { opacity: 1; transform: scale(1); }
+    }
+    .hint {
+      font-size: 0.8rem;
+      color: #888;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+      min-height: 3em;
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    button {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      font-family: "Space Mono", monospace;
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #ccc;
+      cursor: pointer;
+    }
+    button:hover:not(:disabled) {
+      border-color: #555;
+      color: #fff;
+    }
+    button.primary {
+      background: rgba(120, 0, 0, 0.35);
+      border-color: rgba(180, 0, 0, 0.6);
+      color: #ffecec;
+    }
+    button.primary:hover:not(:disabled) {
+      border-color: rgba(255, 120, 120, 0.8);
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .sync-msg {
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #555;
+      margin-top: 1rem;
+    }
+    .sync-msg.err { color: #a66; }
+    .back {
+      margin-top: 1.25rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .back a { color: #666; text-decoration: none; }
+    .back a:hover { color: #999; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="label">Training</p>
+    <h1 id="welcomeTitle">KEGEL</h1>
+    <div class="counter-box">
+      <div class="n" id="cycleCount">—</div>
+      <p class="sub">Completed cycles</p>
+    </div>
+    <p class="phase" id="phaseLabel"></p>
+    <div class="timer-block">
+      <div class="timer" id="timerDisplay">—</div>
+      <p class="good-girl-msg" id="goodGirlMsg">Good Girl</p>
+    </div>
+    <p class="hint" id="phaseHint">Squeeze your pelvic floor muscles steadily during the hold. Fully release during rest. I want you tight.</p>
+    <div class="controls">
+      <button type="button" class="primary" id="btnStart">Start cycle</button>
+      <button type="button" id="btnStop" disabled>Stop</button>
+    </div>
+    <p class="sync-msg" id="syncMsg"></p>
+    <p class="back"><a href="verification.html" id="backLink">Back to verification</a></p>
+  </div>
+  <!--
+    Apps Script: add doGet branch for mode=sorry_count returning JSON { "count": number }
+    using the SAME cell/column that mode=sorry_increment updates for this token+name.
+    Redeploy web app (new version) after editing the script.
+  -->
+  <script>
+    var SHEET_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz7pERiNYGSmrTqmGnHf-ywzFUB9rqJSUHiJ7f8SmjNGAis8zEP1LASs_KC2LYl0yP3/exec";
+    var SQUEEZE_SEC = 10;
+    var RELAX_SEC = 5;
+
+    var params = new URLSearchParams(window.location.search);
+    var tokenParam = params.get("token");
+    var nameParam = params.get("name");
+    var isLoppan = !!(nameParam && nameParam.toLowerCase() === "loppan");
+
+    var welcomeTitle = document.getElementById("welcomeTitle");
+    var cycleCountEl = document.getElementById("cycleCount");
+    var phaseLabel = document.getElementById("phaseLabel");
+    var timerDisplay = document.getElementById("timerDisplay");
+    var btnStart = document.getElementById("btnStart");
+    var btnStop = document.getElementById("btnStop");
+    var syncMsg = document.getElementById("syncMsg");
+    var backLink = document.getElementById("backLink");
+    var goodGirlMsg = document.getElementById("goodGirlMsg");
+
+    if (tokenParam) {
+      var q = new URLSearchParams(window.location.search);
+      backLink.href = "verification.html?" + q.toString();
+    }
+
+    if (!isLoppan) {
+      window.location.replace("verification.html" + window.location.search);
+    }
+
+    function setSync(text, isErr) {
+      syncMsg.textContent = text || "";
+      syncMsg.className = "sync-msg" + (isErr ? " err" : "");
+    }
+
+    function loadSorryCount(options) {
+      var silent = options && options.silent;
+      if (!SHEET_SCRIPT_URL) return Promise.resolve(null);
+      var q = new URLSearchParams();
+      q.set("mode", "sorry_count");
+      if (tokenParam) q.set("token", tokenParam);
+      if (nameParam) q.set("name", nameParam);
+      return fetch(SHEET_SCRIPT_URL + "?" + q.toString(), { method: "GET" })
+        .then(function (res) {
+          if (!res.ok) throw new Error("bad");
+          return res.json();
+        })
+        .then(function (data) {
+          if (data && typeof data.count === "number" && !isNaN(data.count)) {
+            cycleCountEl.textContent = String(data.count);
+            if (!silent) setSync("");
+            return data.count;
+          }
+          throw new Error("no count");
+        })
+        .catch(function () {
+          if (!silent) {
+            cycleCountEl.textContent = "—";
+            setSync("Could not load count — add sorry_count to your Apps Script, then redeploy.", true);
+            return null;
+          }
+          return Promise.reject(new Error("load failed"));
+        });
+    }
+
+    function incrementSorryField() {
+      var q = new URLSearchParams();
+      q.set("mode", "sorry_increment");
+      if (tokenParam) q.set("token", tokenParam);
+      if (nameParam) q.set("name", nameParam);
+      return fetch(SHEET_SCRIPT_URL + "?" + q.toString(), { method: "GET" })
+        .then(function (res) {
+          if (!res.ok) throw new Error("increment failed");
+          return res.json();
+        })
+        .then(function (data) {
+          if (data && typeof data.sorries === "number" && !isNaN(data.sorries)) {
+            cycleCountEl.textContent = String(data.sorries);
+            setSync("");
+          }
+          return data;
+        });
+    }
+
+    var pendingCycleSync = null;
+
+    function syncCycleDuringRelax() {
+      pendingCycleSync = incrementSorryField()
+        .then(function (data) {
+          if (data && typeof data.sorries === "number" && !isNaN(data.sorries)) {
+            return;
+          }
+          return loadSorryCount({ silent: true });
+        })
+        .catch(function (err) {
+          setSync("Could not save cycle — check sheet script.", true);
+          throw err;
+        });
+    }
+
+    var tickTimer = null;
+    var phase = "idle";
+    var remaining = 0;
+    var sessionRunning = false;
+
+    function clearTick() {
+      if (tickTimer) {
+        clearInterval(tickTimer);
+        tickTimer = null;
+      }
+    }
+
+    function showPhase() {
+      phaseLabel.className = "phase";
+      if (phase === "squeeze") {
+        phaseLabel.textContent = "HOLD";
+        phaseLabel.classList.add("hold");
+        timerDisplay.textContent = String(remaining);
+        timerDisplay.style.display = "block";
+        goodGirlMsg.style.display = "none";
+      } else if (phase === "relax") {
+        phaseLabel.textContent = "RELAX";
+        phaseLabel.classList.add("relax");
+        timerDisplay.textContent = String(remaining);
+        timerDisplay.style.display = "block";
+        goodGirlMsg.style.display = "none";
+      } else if (phase === "praise") {
+        phaseLabel.textContent = "";
+        timerDisplay.textContent = "";
+        timerDisplay.style.display = "none";
+        goodGirlMsg.style.display = "block";
+      } else {
+        phaseLabel.textContent = "";
+        timerDisplay.textContent = "—";
+        timerDisplay.style.display = "block";
+        goodGirlMsg.style.display = "none";
+      }
+    }
+
+    function endRelaxPhase() {
+      var proceed = function () {
+        if (!sessionRunning) return;
+        pendingCycleSync = null;
+        phase = "praise";
+        showPhase();
+        btnStart.disabled = false;
+        btnStop.disabled = false;
+      };
+      var onFail = function () {
+        sessionRunning = false;
+        phase = "idle";
+        btnStart.disabled = false;
+        btnStop.disabled = true;
+        pendingCycleSync = null;
+        showPhase();
+      };
+      if (pendingCycleSync) {
+        pendingCycleSync.then(proceed).catch(onFail);
+      } else {
+        proceed();
+      }
+    }
+
+    function runTick() {
+      clearTick();
+      tickTimer = setInterval(function () {
+        remaining--;
+        if (remaining > 0) {
+          showPhase();
+          return;
+        }
+        if (phase === "squeeze") {
+          phase = "relax";
+          remaining = RELAX_SEC;
+          showPhase();
+          syncCycleDuringRelax();
+          return;
+        }
+        if (phase === "relax") {
+          clearTick();
+          endRelaxPhase();
+        }
+      }, 1000);
+    }
+
+    function startSession() {
+      sessionRunning = true;
+      phase = "squeeze";
+      remaining = SQUEEZE_SEC;
+      btnStart.disabled = true;
+      btnStop.disabled = false;
+      showPhase();
+      runTick();
+    }
+
+    function stopSession() {
+      sessionRunning = false;
+      clearTick();
+      pendingCycleSync = null;
+      phase = "idle";
+      showPhase();
+      btnStart.disabled = false;
+      btnStop.disabled = true;
+      setSync("");
+    }
+
+    btnStart.addEventListener("click", function () {
+      if (btnStart.disabled) return;
+      startSession();
+    });
+
+    btnStop.addEventListener("click", function () {
+      stopSession();
+    });
+
+    if (welcomeTitle && tokenParam) {
+      welcomeTitle.textContent = "KEGEL · #" + tokenParam;
+    }
+
+    loadSorryCount();
+  </script>
+</body>
+</html>
