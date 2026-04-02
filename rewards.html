@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rewards</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { height: 100%; background: #0a0a0a; }
+    body {
+      min-height: 100%;
+      font-family: "Space Mono", monospace;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(120, 0, 0, 0.12) 0%, transparent 50%),
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(255,255,255,0.02) 2px,
+          rgba(255,255,255,0.02) 4px
+        );
+      pointer-events: none;
+      z-index: 0;
+    }
+    .reward {
+      position: relative;
+      z-index: 1;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      animation: fadeUp 1s ease-out;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .label {
+      font-size: 0.7rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+    .gold-star {
+      font-size: clamp(3rem, 18vw, 5rem);
+      line-height: 1;
+      margin-bottom: 0.35rem;
+      color: #d4af37;
+      text-shadow:
+        0 0 20px rgba(212, 175, 55, 0.55),
+        0 0 42px rgba(212, 175, 55, 0.28);
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
+    }
+    h1 {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(2rem, 10vw, 3rem);
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      color: #fff;
+      line-height: 1.05;
+      margin-bottom: 1rem;
+      text-shadow: 0 0 32px rgba(255, 180, 180, 0.25);
+    }
+    .sub {
+      font-size: 0.9rem;
+      color: #aaa;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+    .sub strong {
+      color: #ffb3b3;
+    }
+    .collect-btn {
+      display: block;
+      width: 100%;
+      padding: 0.95rem 1rem;
+      margin-bottom: 1rem;
+      font-family: "Space Mono", monospace;
+      font-size: 0.85rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-align: center;
+      text-decoration: none;
+      background: rgba(180, 0, 0, 0.65);
+      border: 1px solid rgba(255, 120, 120, 0.9);
+      color: #ffecec;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .collect-btn:hover:not(:disabled) {
+      border-color: rgba(255, 180, 180, 1);
+      color: #fff;
+    }
+    .collect-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+    .order-confirm {
+      display: none;
+      font-size: 0.88rem;
+      letter-spacing: 0.08em;
+      color: #c4c4c4;
+      line-height: 1.55;
+      margin-bottom: 1.5rem;
+    }
+    .order-confirm .line-main {
+      text-transform: uppercase;
+    }
+    .order-confirm .line-mail {
+      display: block;
+      margin-top: 0.65rem;
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+      text-transform: none;
+      color: #9a9a9a;
+    }
+    .order-confirm.show {
+      display: block;
+      animation: fadeUp 0.5s ease-out;
+    }
+    .back {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .back a { color: #666; text-decoration: none; }
+    .back a:hover { color: #999; }
+  </style>
+</head>
+<body>
+  <div class="reward">
+    <p class="label">Milestone</p>
+    <div class="gold-star" aria-hidden="true">★</div>
+    <h1 id="headline">111 cycles</h1>
+    <p class="sub" id="bodyCopy">You earned this. <strong>Good girl.</strong></p>
+    <button type="button" class="collect-btn" id="collectBtn">Collect your reward</button>
+    <p class="order-confirm" id="orderConfirm" role="status">
+      <span class="line-main">Your reward has been ordered</span>
+      <span class="line-mail">It will arrive in your mail. Hold Tight.</span>
+    </p>
+    <p class="back"><a href="verification.html" id="backLink">Back to verification</a></p>
+  </div>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var tokenParam = params.get("token");
+      var nameParam = params.get("name");
+      var isLoppan = !!(nameParam && nameParam.toLowerCase() === "loppan");
+
+      if (!isLoppan) {
+        window.location.replace("verification.html" + window.location.search);
+        return;
+      }
+
+      var verifyHref = "verification.html" + (tokenParam || nameParam ? "?" + params.toString() : "");
+      var collectBtn = document.getElementById("collectBtn");
+      var orderConfirm = document.getElementById("orderConfirm");
+      var backLink = document.getElementById("backLink");
+      backLink.href = verifyHref;
+
+      collectBtn.addEventListener("click", function () {
+        if (collectBtn.disabled) return;
+        collectBtn.disabled = true;
+        orderConfirm.classList.add("show");
+      });
+    })();
+  </script>
+</body>
+</html>

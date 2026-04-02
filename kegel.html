@@ -214,6 +214,10 @@
     var SHEET_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz7pERiNYGSmrTqmGnHf-ywzFUB9rqJSUHiJ7f8SmjNGAis8zEP1LASs_KC2LYl0yP3/exec";
     var SQUEEZE_SEC = 10;
     var RELAX_SEC = 5;
+    /** Completed cycles at or above this send Loppan to rewards.html */
+    var REWARD_THRESHOLD = 111;
+    var REWARD_REDIRECT_MS = 2200;
+    var rewardAfterPraise = false;
 
     var params = new URLSearchParams(window.location.search);
     var tokenParam = params.get("token");
@@ -239,6 +243,10 @@
       window.location.replace("verification.html" + window.location.search);
     }
 
+    function redirectToRewards() {
+      window.location.replace("rewards.html" + (window.location.search || ""));
+    }
+
     function setSync(text, isErr) {
       syncMsg.textContent = text || "";
       syncMsg.className = "sync-msg" + (isErr ? " err" : "");
@@ -260,6 +268,9 @@
           if (data && typeof data.count === "number" && !isNaN(data.count)) {
             cycleCountEl.textContent = String(data.count);
             if (!silent) setSync("");
+            if (isLoppan && data.count >= REWARD_THRESHOLD) {
+              redirectToRewards();
+            }
             return data.count;
           }
           throw new Error("no count");
@@ -288,6 +299,9 @@
           if (data && typeof data.sorries === "number" && !isNaN(data.sorries)) {
             cycleCountEl.textContent = String(data.sorries);
             setSync("");
+            if (isLoppan && data.sorries >= REWARD_THRESHOLD) {
+              rewardAfterPraise = true;
+            }
           }
           return data;
         });
@@ -354,6 +368,14 @@
         pendingCycleSync = null;
         phase = "praise";
         showPhase();
+        if (rewardAfterPraise) {
+          rewardAfterPraise = false;
+          sessionRunning = false;
+          btnStart.disabled = true;
+          btnStop.disabled = true;
+          setTimeout(redirectToRewards, REWARD_REDIRECT_MS);
+          return;
+        }
         btnStart.disabled = false;
         btnStop.disabled = false;
       };
@@ -413,6 +435,15 @@
       btnStart.disabled = false;
       btnStop.disabled = true;
       setSync("");
+      var n = parseInt(String(cycleCountEl.textContent).trim(), 10);
+      if (isLoppan && !isNaN(n) && n >= REWARD_THRESHOLD) {
+        rewardAfterPraise = false;
+        btnStart.disabled = true;
+        btnStop.disabled = true;
+        setTimeout(redirectToRewards, 400);
+        return;
+      }
+      rewardAfterPraise = false;
     }
 
     btnStart.addEventListener("click", function () {
